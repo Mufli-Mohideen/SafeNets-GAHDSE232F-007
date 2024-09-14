@@ -1,0 +1,44 @@
+# Ignore environment configuration file
+.env
+
+# Ignore log files
+/app/logs/
+/app/logs/*.log
+
+# Ignore Composer dependencies
+/vendor/
+/composer.lock
+
+# Ignore database scripts
+/database/*.sql
+
+# Ignore IDE specific files and directories
+.idea/
+/.vscode/
+
+# Ignore system specific files (macOS, Windows)
+.DS_Store
+Thumbs.db
+
+# Ignore backup, temp, and lock files
+*.bak
+*.tmp
+*.swp
+*.swo
+
+# Ignore public assets (cache or generated files if applicable)
+/public/css/
+/public/js/
+/public/images/
+
+# Ignore test case outputs
+/tests/
+
+# Ignore Apache configuration file
+/.htaccess
+
+#Test files
+/add_admin.php
+/info.php
+/sample_email.php
+/test_db.php
