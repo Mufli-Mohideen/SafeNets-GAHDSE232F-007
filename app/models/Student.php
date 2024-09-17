@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../helpers/encryption.php';
-require_once __DIR__ . '/../helpers/session_helper.php';
 
 class Student {
     private $pdo;
@@ -106,5 +105,28 @@ class Student {
         return $students;
     }
     
+    public function doesIdExist($id) {
+        // Prepare the SQL query to fetch all encrypted IDs
+        $sql = "SELECT nic_or_postal_id FROM students";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+    
+        // Fetch all encrypted IDs from the database
+        $encryptedIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    
+        // Loop through each encrypted ID, decrypt it, and compare
+        foreach ($encryptedIds as $encryptedId) {
+            // Decrypt the ID
+            $decryptedId = EncryptionHelper::decrypt($encryptedId);
+    
+            // Check if the decrypted ID matches the submitted ID
+            if ($decryptedId === $id) {
+                return true; // ID exists
+            }
+        }
+    
+        // If no match is found, return false
+        return false;
+    }
     
 }

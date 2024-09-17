@@ -1,10 +1,8 @@
 <?php
 
 function secureSessionStart() {
+    // Start the session if it is not already started
     if (session_status() === PHP_SESSION_NONE) {
-        // Prevent session hijacking by regenerating the session ID
-        session_regenerate_id(true);
-
         // Set secure session cookie settings
         $cookieParams = session_get_cookie_params();
         session_set_cookie_params([
@@ -17,6 +15,7 @@ function secureSessionStart() {
         ]);
 
         session_start(); // Start the session
+        session_regenerate_id(true); // Regenerate the session ID
     }
 }
 
