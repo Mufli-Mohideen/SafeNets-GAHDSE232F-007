@@ -38,15 +38,25 @@ class Student {
         $encryptedNicPostalId = EncryptionHelper::encrypt($nicPostalId);
         $encryptedFullName = EncryptionHelper::encrypt($fullName);
         $encryptedEmail = EncryptionHelper::encrypt($email);
-
+    
         // Generate index number
         $indexNumber = $this->generateIndexNumber($eid);
+        
+        // Encrypt the index number once and store it
         $encryptedIndexNumber = EncryptionHelper::encrypt($indexNumber);
-
+    
         // Insert into the database
         $stmt = $this->pdo->prepare("INSERT INTO students (eid, nic_or_postal_id, full_name, email, index_number) VALUES (?, ?, ?, ?, ?)");
-        return $stmt->execute([$eid, $encryptedNicPostalId, $encryptedFullName, $encryptedEmail, $encryptedIndexNumber]);
+        $isStudentInserted = $stmt->execute([$eid, $encryptedNicPostalId, $encryptedFullName, $encryptedEmail, $encryptedIndexNumber]);
+    
+        if ($isStudentInserted) {
+            // Return the encrypted index number for further use
+            return $encryptedIndexNumber;
+        }
+    
+        return false; // Return false if insertion fails
     }
+    
 
     // Update student data (for admin use)
     public function update($indexNumber, $nicPostalId, $fullName, $email) {
@@ -128,5 +138,22 @@ class Student {
         // If no match is found, return false
         return false;
     }
+
+    public function getIndexNumber($nicPostalId) {
+        // Retrieve all students from the database
+        $stmt = $this->pdo->query("SELECT index_number, nic_or_postal_id FROM students");
+        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+        // Iterate through all records, decrypt and compare the NIC/Postal ID
+        foreach ($students as $student) {
+            $decryptedNicPostalId = EncryptionHelper::decrypt($student['nic_or_postal_id']);
+    
+            if ($decryptedNicPostalId === $nicPostalId) {
+                // If NIC or Postal ID matches, decrypt and return the index number
+                return EncryptionHelper::decrypt($student['index_number']);
+            }
+        }
+    
+        return null; // Return null if no matching NIC/Postal ID is found
+    }
 }

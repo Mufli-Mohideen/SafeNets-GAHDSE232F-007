@@ -10,11 +10,9 @@ class OLResult {
     }
 
     // Create a new O/L result
-    public function create($indexNumber, $scienceGrade, $mathGrade, $sinhalaGrade, $englishGrade, $historyGrade) {
-        $encryptedIndexNumber = EncryptionHelper::encrypt($indexNumber);
-
-        $stmt = $this->pdo->prepare("INSERT INTO ol_results (index_number, science_grade, math_grade, sinhala_grade, english_grade, history_grade) VALUES (?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([$encryptedIndexNumber, $scienceGrade, $mathGrade, $sinhalaGrade, $englishGrade, $historyGrade]);
+    public function create($encryptedIndexNumber) {
+        $stmt = $this->pdo->prepare("INSERT INTO ol_results (index_number) VALUES (?)");
+        return $stmt->execute([$encryptedIndexNumber]);
     }
 
     // Update O/L result

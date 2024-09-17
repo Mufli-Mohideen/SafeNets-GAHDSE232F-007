@@ -10,11 +10,9 @@ class ALResult {
     }
 
     // Create a new AL result entry
-    public function create($indexNumber, $biologyGrade, $chemistryGrade, $physicsGrade) {
-        $encryptedIndexNumber = EncryptionHelper::encrypt($indexNumber);
-
-        $stmt = $this->pdo->prepare("INSERT INTO al_results (index_number, biology_grade, chemistry_grade, physics_grade) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$encryptedIndexNumber, $biologyGrade, $chemistryGrade, $physicsGrade]);
+    public function create($encryptedIndexNumber) {
+        $stmt = $this->pdo->prepare("INSERT INTO al_results (index_number) VALUES (?)");
+        return $stmt->execute([$encryptedIndexNumber]);
     }
 
     // Update AL result entry

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../models/OLResult.php';
 require_once __DIR__ . '/../models/ALResult.php';
 require_once __DIR__ . '/../helpers/session_helper.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../helpers/email_helper.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
 $dotenv->load();
@@ -67,7 +68,7 @@ class StudentController {
 
     public function handleStudentSignup() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $exam = $_POST['exam'];
+            $exam = $_POST['exam']; // 1: Grade 5, 2: O/L, 3: A/L
             $id = $_POST['id'];
             $fullName = strtoupper(trim($_POST['fullName']));
             $email = trim($_POST['email']);
@@ -85,11 +86,47 @@ class StudentController {
                     exit();
                 }
     
-                // Proceed to create the student
-                $studentCreated = $this->studentModel->create($exam, $id, $fullName, $email);
+                // Proceed to create the student and get the encrypted index number
+                $encryptedIndexNumber = $this->studentModel->create($exam, $id, $fullName, $email);
     
-                if ($studentCreated) {
-                    header('Location: /safenets/public/student/signup?message=Registration successful!');
+                if ($encryptedIndexNumber) {
+                    // Use the same encrypted index number to create the corresponding exam result
+                    switch ($exam) {
+                        case 1:
+                            $grade5ResultCreated = $this->grade5ResultModel->create($encryptedIndexNumber);
+                            if (!$grade5ResultCreated) {
+                                header('Location: /safenets/public/student/signup?message=Error creating Grade 5 result');
+                                exit();
+                            }
+                            break;
+                        case 2:
+                            $olResultCreated = $this->olResultModel->create($encryptedIndexNumber);
+                            if (!$olResultCreated) {
+                                header('Location: /safenets/public/student/signup?message=Error creating O/L result');
+                                exit();
+                            }
+                            break;
+                        case 3:
+                            $alResultCreated = $this->alResultModel->create($encryptedIndexNumber);
+                            if (!$alResultCreated) {
+                                header('Location: /safenets/public/student/signup?message=Error creating A/L result');
+                                exit();
+                            }
+                            break;
+                        default:
+                            header('Location: /safenets/public/student/signup?message=Invalid exam type');
+                            exit();
+                    }
+    
+                    // Send an email to the student with the (decrypted) index number
+                    $decryptedIndexNumber = EncryptionHelper::decrypt($encryptedIndexNumber);
+                    $emailBody = "Dear $fullName,<br><br>Your registration was successful! Your Index Number is: <strong>$decryptedIndexNumber</strong>.<br>Please keep this number safe for future reference.<br><br>Best regards,<br>Department of Examinations";
+    
+                    if (sendEmail($email, 'Registration Successful - Your Index Number', $emailBody)) {
+                        header('Location: /safenets/public/student/signup?message=Registration successful! Check your email for your Index number.');
+                    } else {
+                        header('Location: /safenets/public/student/signup?message=Registration successful but failed to send email.');
+                    }
                 } else {
                     header('Location: /safenets/public/student/signup?message=Error during registration');
                 }
@@ -99,5 +136,5 @@ class StudentController {
                 exit();
             }
         }
-    }
+    }    
 }

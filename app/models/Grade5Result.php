@@ -10,11 +10,9 @@ class Grade5Result {
     }
 
     // Create new Grade 5 result
-    public function create($indexNumber, $marks) {
-        $encryptedIndexNumber = EncryptionHelper::encrypt($indexNumber);
-
-        $stmt = $this->pdo->prepare("INSERT INTO grade5_results (index_number, marks) VALUES (?, ?)");
-        return $stmt->execute([$encryptedIndexNumber, $marks]);
+    public function create($encryptedIndexNumber) {
+        $stmt = $this->pdo->prepare("INSERT INTO grade5_results (index_number) VALUES (?)");
+        return $stmt->execute([$encryptedIndexNumber]);
     }
 
     // Update Grade 5 result
