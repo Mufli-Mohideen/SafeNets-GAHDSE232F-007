@@ -46,5 +46,58 @@ class ALResult {
         $stmt = $this->pdo->prepare("DELETE FROM al_results WHERE index_number = ?");
         return $stmt->execute([$encryptedIndexNumber]);
     }
+    public function getByIndexNumber($indexNumber) {
+        // Prepare the SQL statement to select A/L results
+        $stmt = $this->pdo->prepare("SELECT * FROM al_results");
+        
+        // Execute the statement
+        $stmt->execute();
+        
+        // Fetch all results
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+        // Loop through results and decrypt index numbers for comparison
+        foreach ($results as $result) {
+            $decryptedIndexNumber = EncryptionHelper::decrypt($result['index_number']);
+            
+            if ($decryptedIndexNumber === $indexNumber) {
+                $result['index_number'] = $decryptedIndexNumber;
+                return $result; // Return A/L result if the index matches
+            }
+        }
+    
+        return null; // Return null if no matching result is found
+    }
+    
+    public function updateByIndexNumber($indexNumber, $data) {
+        // Prepare the SQL statement to select A/L results
+        $stmt = $this->pdo->prepare("SELECT * FROM al_results");
+        
+        // Execute the statement
+        $stmt->execute();
+        
+        // Fetch all results
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Loop through results and compare decrypted index numbers
+        foreach ($results as $result) {
+            $decryptedIndexNumber = EncryptionHelper::decrypt($result['index_number']);
+            
+            if ($decryptedIndexNumber === $indexNumber) {
+                // Update the result fields (e.g., grades)
+                $updateStmt = $this->pdo->prepare("UPDATE al_results SET biology_grade = :biology_grade, chemistry_grade = :chemistry_grade, physics_grade = :physics_grade WHERE index_number = :index_number");
+                $updateStmt->execute([
+                    'biology_grade' => $data['biology_grade'],
+                    'chemistry_grade' => $data['chemistry_grade'],
+                    'physics_grade' => $data['physics_grade'],
+                    'index_number' => $result['index_number']
+                ]);
+                return true; // Return true if the update was successful
+            }
+        }
+    
+        return false; // Return false if no matching result is found
+    }
+    
 }
 ?>

@@ -2,10 +2,13 @@
 
 require_once __DIR__ . '/../app/controllers/StudentController.php';
 require_once __DIR__ .'/../app/controllers/AuthController.php';
+require_once __DIR__ .'/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/config/db_config.php';
+
 
 $studentController = new StudentController($pdo);
 $authController = new AuthController($pdo);
+$adminController = new AdminController($pdo);
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestMethod = $_SERVER['REQUEST_METHOD'];
@@ -26,26 +29,51 @@ switch ($uri) {
             // Display the signup form (GET request)
             include __DIR__ . '/../app/views/auth/signup.php';
         }
-        break;
+    break;
 
-        case '/student/login':
-            if ($requestMethod === 'POST') {
-                // Handle signup form submission
-                $authController->handleStudentLogin();
-            } else {
-                // Display the signup form (GET request)
-                include __DIR__ . '/../app/views/auth/login.php';
-            }
-            break;
+    case '/student/login':
+        if ($requestMethod === 'POST') {
+            // Handle signup form submission
+            $authController->handleStudentLogin();
+        } else {
+            // Display the signup form (GET request)
+            include __DIR__ . '/../app/views/auth/login.php';
+        }
+    break;
 
-            case '/student/send-verification':
-                if ($requestMethod === 'POST') {
+    case '/student/send-verification':
+        if ($requestMethod === 'POST') {
             // Handle sending verification code
             $eid = $_POST['eid'];
             $indexNumber = $_POST['indexNumber'];
             echo $authController->sendVerification($eid, $indexNumber);
         }
-        break;
+    break;
+
+    case '/admin/login':
+        if ($requestMethod === 'POST') {
+            $adminController->adminLogin();
+        } else {
+            // Display the signup form (GET request)
+            include __DIR__ . '/../app/views/admin/login.php';
+        }
+    break;
+
+    case '/admin/login/dashboard':
+        if ($requestMethod === 'POST') {
+            $adminController->getStudentExamData();
+        } else {
+            // Display the signup form (GET request)
+            include __DIR__ . '/../app/views/admin/dashboard.php';
+        }
+    break;
+
+    case '/admin/login/update':
+        if ($requestMethod === 'POST') {
+            $adminController->updateResults();
+        }
+    break;
+    
 
     case '/':
         include __DIR__ . '/../app/views/home.php';
