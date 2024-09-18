@@ -136,5 +136,5 @@ class StudentController {
                 exit();
             }
         }
-    }    
+    }
 }

@@ -1,9 +1,11 @@
 <?php
 
 require_once __DIR__ . '/../app/controllers/StudentController.php';
+require_once __DIR__ .'/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/config/db_config.php';
 
 $studentController = new StudentController($pdo);
+$authController = new AuthController($pdo);
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestMethod = $_SERVER['REQUEST_METHOD'];
@@ -23,6 +25,25 @@ switch ($uri) {
         } else {
             // Display the signup form (GET request)
             include __DIR__ . '/../app/views/auth/signup.php';
+        }
+        break;
+
+        case '/student/login':
+            if ($requestMethod === 'POST') {
+                // Handle signup form submission
+                $authController->handleStudentLogin();
+            } else {
+                // Display the signup form (GET request)
+                include __DIR__ . '/../app/views/auth/login.php';
+            }
+            break;
+
+            case '/student/send-verification':
+                if ($requestMethod === 'POST') {
+            // Handle sending verification code
+            $eid = $_POST['eid'];
+            $indexNumber = $_POST['indexNumber'];
+            echo $authController->sendVerification($eid, $indexNumber);
         }
         break;
 

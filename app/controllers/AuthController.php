@@ -1,9 +1,17 @@
 <?php
 // app/controllers/AuthController.php
+session_start(); // Start the session
 
 require_once __DIR__ . '/../helpers/session_helper.php';
 require_once __DIR__ . '/../helpers/email_helper.php';
 require_once __DIR__ . '/../models/Student.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../helpers/email_helper.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->load();
 
 class AuthController {
     private $studentModel;
@@ -12,45 +20,94 @@ class AuthController {
         $this->studentModel = new Student($pdo);
     }
 
-    public function login($indexNumber) {
-        // Use the read method to find the student by the index number
-        $student = $this->studentModel->read($indexNumber);
-        
+
+    public function sendVerification($eid, $indexNumber) {
+        $student = $this->studentModel->readByIndexAndExam($indexNumber, $eid);
+    
+        // Check if a student was found
         if ($student) {
-            // If the student exists, send the verification code to their email
-            $this->sendVerificationCode($student['email']);
-            $_SESSION['login_index'] = $indexNumber;  // Store index number for verification later
-            return true; // Successful initiation of login process
+            // Prepare the email
+            $to = $student['email'];
+            $subject = "Your Verification Code";
+            $verificationCode = rand(10000, 99999);
+            $message = "Your verification code is: " . $verificationCode;
+    
+            $_SESSION['verification_code'] = $verificationCode; 
+            $_SESSION['code_expires'] = time() + 300;
+    
+            // Send the email using the helper function
+            if (sendEmail($to, $subject, $message)) {
+                // Optionally, you can return a success response or message
+                return "Verification code sent to your email.";
+            } else {
+                // Handle email sending failure
+                return "Failed to send verification code.";
+            }
         } else {
-            return false; // Student not found
+            // Handle case where no student was found
+            return "Invalid index number or exam ID.";
         }
     }
     
+    
+    
+    
 
-    public function verifyLogin($inputCode) {
-        // Verify if the code matches
-        if (isset($_SESSION['verification_code']) && time() <= $_SESSION['code_expires']) {
-            if ($inputCode == $_SESSION['verification_code']) {
-                // Successful login, now authenticate the user
-                $indexNumber = $_SESSION['login_index'];
-                $student = $this->studentModel->read($indexNumber);
+    public function handleStudentLogin() {
+        // Get POST data from the form
+        $exam = $_POST["exam"] ?? null;
+        $indexNumber = $_POST['indexNumber'] ?? null;
+        $otp = $_POST['otp'] ?? null;
 
-                if ($student) {
-                    $_SESSION['student_id'] = $student['id'];
-                    return true; // Authentication successful
-                }
-            }
+        $failedauth = 'Location: /safenets/public/student/login';
+    
+        // Check if index number and OTP are provided
+
+        if (!$indexNumber || !$otp || !$exam) {
+            $_SESSION['message'] = "Please complete all the fields before continuing!";
+            header($failedauth); // Adjust the redirect as necessary
+            exit();
         }
-
-        return false; // Verification failed
+    
+        // Check if OTP is set in the session
+        if (!isset($_SESSION['verification_code']) || !isset($_SESSION['code_expires'])) {
+            $_SESSION['message'] = "No OTP found or OTP has expired.";
+            header($failedauth);
+            exit();
+        }
+    
+        // Check if the OTP has expired
+        if (time() > $_SESSION['code_expires']) {
+            unset($_SESSION['verification_code']);
+            unset($_SESSION['code_expires']);
+            $_SESSION['message'] = "The OTP has expired. Please request a new one.";
+            header($failedauth);
+            exit();
+        }
+    
+        // Check if the OTP matches
+        if ($_SESSION['verification_code'] != $otp) {
+            $_SESSION['message'] = "Invalid OTP. Please try again.";
+            header($failedauth);
+            exit();
+        }
+    
+        // If OTP matches and is still valid, perform login logic
+        $student = $this->studentModel->readByIndexAndExam($indexNumber,$exam); // Assuming you have a method to get student details by index number
+    
+        if ($student) {
+            unset($_SESSION['verification_code']);
+            unset($_SESSION['code_expires']);
+            
+            $_SESSION['student'] = $student;
+    
+            header('Location: /safenets/public/');
+            exit();
+        } else {
+            echo "Invalid index number."; // Debugging
+        }
     }
-
-    private function sendVerificationCode($email) {
-        $verificationCode = random_int(10000, 99999);  // Generate 5-digit code
-        $_SESSION['verification_code'] = $verificationCode;
-        $_SESSION['code_expires'] = time() + 300;  // Expires in 5 minutes
-
-        // Use email helper to send the code
-        sendEmail($email, "Your verification code", "Your code is: $verificationCode");
-    }
+    
+    
+    
 }

@@ -36,7 +36,7 @@
           </div>
 
           <!-- Login and Register buttons -->
-          <a href="login.php" class="btn">Login</a>
+          <a href="/safenets/public/student/login" class="btn">Login</a>
           <a href="/safenets/public/student/signup" class="btn btn-register">Register</a>
         </div>
       </ul>

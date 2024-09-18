@@ -156,4 +156,35 @@ class Student {
     
         return null; // Return null if no matching NIC/Postal ID is found
     }
+
+    public function readByIndexAndExam($indexNumber, $exam) {
+        // Prepare the SQL statement to select the student based on exam
+        $stmt = $this->pdo->prepare("SELECT * FROM students WHERE eid = :exam");
+        
+        // Bind the exam parameter
+        $stmt->bindParam(':exam', $exam);
+        
+        // Execute the statement
+        $stmt->execute();
+        
+        // Fetch all student records for the specified exam
+        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+        // Loop through students and decrypt index numbers for comparison
+        foreach ($students as $student) {
+            // Decrypt the index number
+            $decryptedIndexNumber = EncryptionHelper::decrypt($student['index_number']);
+            
+            if ($decryptedIndexNumber === $indexNumber) {
+                $student['full_name'] = EncryptionHelper::decrypt($student['full_name']);
+                $student['email'] = EncryptionHelper::decrypt($student['email']);
+                $student['index_number'] = $decryptedIndexNumber; 
+                
+                return $student; 
+            }
+        }
+    
+        return null; // Return null if no match found
+    }
+    
 }
