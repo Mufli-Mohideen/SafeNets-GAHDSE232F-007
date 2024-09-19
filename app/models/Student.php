@@ -178,7 +178,8 @@ class Student {
             if ($decryptedIndexNumber === $indexNumber) {
                 $student['full_name'] = EncryptionHelper::decrypt($student['full_name']);
                 $student['email'] = EncryptionHelper::decrypt($student['email']);
-                $student['index_number'] = $decryptedIndexNumber; 
+                $student['nic_or_postal_id'] = EncryptionHelper::decrypt($student['nic_or_postal_id']);
+                $student['index_number'] = $decryptedIndexNumber;
                 
                 return $student; 
             }

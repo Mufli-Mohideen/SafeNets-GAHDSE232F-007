@@ -37,7 +37,7 @@ switch ($uri) {
             $authController->handleStudentLogin();
         } else {
             // Display the signup form (GET request)
-            include __DIR__ . '/../app/views/auth/login.php';
+            require __DIR__ . '/../app/views/auth/login.php';
         }
     break;
 
@@ -49,6 +49,26 @@ switch ($uri) {
             echo $authController->sendVerification($eid, $indexNumber);
         }
     break;
+
+    case '/student/result':
+        if (isset($_SESSION['student']) && isset($_SESSION['examResults'])) {
+            require __DIR__ . '/../app/views/student/results.php'; // Render the results page
+        } else {
+            echo "No session found, redirecting to login";
+            require __DIR__ . '/../app/views/auth/login.php'; // Redirect to login if not authenticated
+        }
+        break;
+
+        case '/student/logout':
+            if ($requestMethod === 'POST') {
+                session_unset();
+                session_destroy();
+                require __DIR__ . '/../app/views/home.php';
+                exit();
+            }
+        break;
+    
+    
 
     case '/admin/login':
         if ($requestMethod === 'POST') {
@@ -80,8 +100,7 @@ switch ($uri) {
         break;
 
     default:
-        // If no matching route is found, return a 404 response
         http_response_code(404);
         echo "404 Not Found";
-        break;
+    break;
 }
