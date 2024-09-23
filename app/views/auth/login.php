@@ -43,9 +43,8 @@
                 <input type="text" id="indexNumber" name="indexNumber" class="input" required maxlength="8" />
             </div>
 
-            <!-- reCAPTCHA -->
-            <div class="inputfield" style="display: flex; justify-content: center;">
-                <div class="g-recaptcha" data-sitekey="6LdXF0YqAAAAAIdaG3FeBNV8sm1bZmfnzFfCuFye"></div>
+            <div class="inputfield">
+                <div class="g-recaptcha" id="recaptcha" data-sitekey="6LdXF0YqAAAAAIdaG3FeBNV8sm1bZmfnzFfCuFye"></div>
             </div>
 
             <!-- Verification Button -->

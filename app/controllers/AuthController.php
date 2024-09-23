@@ -45,16 +45,20 @@ class AuthController {
             // Send the email using the helper function
             if (sendEmail($to, $subject, $message)) {
                 // Optionally, you can return a success response or message
-                return "Verification code sent to your email.";
+                echo "Verification code sent to your email.";
+                http_response_code(200);  // Success
             } else {
                 // Handle email sending failure
-                return "Failed to send verification code.";
+                echo "Failed to send verification code.";
+                http_response_code(500);  // Internal Server Error
             }
         } else {
             // Handle case where no student was found
-            return "Invalid index number or exam ID.";
+            echo "Invalid index number or exam ID.";
+            http_response_code(400);  // Bad Request (Invalid input)
         }
     }
+    
     
     
     
@@ -65,8 +69,16 @@ class AuthController {
         $exam = $_POST["exam"] ?? null;
         $indexNumber = $_POST['indexNumber'] ?? null;
         $otp = $_POST['otp'] ?? null;
+        $recaptchaResponse = $_POST['g-recaptcha-response'];
+        $secretKey = $_ENV['RECAPTCHA_SECRET_KEY'];
+            $verifyResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$secretKey}&response={$recaptchaResponse}");
+            $responseData = json_decode($verifyResponse);
         
-
+            if (!$responseData->success){
+                $_SESSION['message'] = "Complete the reCaptcha and try again!";
+            header('Location: /safenets/public/student/login');
+            exit();
+            }
     
         // Check if index number and OTP are provided
 
